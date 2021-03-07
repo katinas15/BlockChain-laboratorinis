@@ -1,3 +1,5 @@
+const requestIp = require('request-ip')
+
 exports.removeExtensionFromFile = file => {
     return file
       .split('.')
@@ -5,3 +7,5 @@ exports.removeExtensionFromFile = file => {
       .join('.')
       .toString()
 }
+
+exports.getIP = req => requestIp.getClientIp(req)

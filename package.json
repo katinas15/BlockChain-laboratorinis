@@ -18,10 +18,12 @@
   },
   "homepage": "https://github.com/katinas15/BlockChain-laboratorinis#readme",
   "dependencies": {
+    "axios": "^0.21.1",
     "express": "^4.17.1",
     "lodash": "^4.17.21",
     "module-alias": "^2.2.2",
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.7",
+    "request-ip": "^2.1.3"
   },
   "_moduleAliases": {
     "@root": ".",

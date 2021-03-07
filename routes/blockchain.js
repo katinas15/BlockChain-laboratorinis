@@ -14,4 +14,12 @@ router.get(
     '/chain',
     controller.getChain)
 
+router.post(
+    '/nodes/register',
+    controller.registerNode)
+
+router.get(
+    '/nodes/resolve',
+    controller.resolveBlockchain)
+
 module.exports = router

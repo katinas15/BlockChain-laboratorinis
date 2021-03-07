@@ -2,6 +2,8 @@
 //https://www.smashingmagazine.com/2020/02/cryptocurrency-blockchain-node-js/
 const crypto = require('crypto')
 const _ = require('lodash')
+const axios = require('axios')
+const {getIP} = require('@middleware/utils')
 
 const hashDifficulty = 3
 
@@ -12,6 +14,16 @@ class Blockchain {
 
         //creating a genesis block
         this.newBlock(1, {proof: 100, hash: 'startHash'})
+
+        this.peers = new Set()
+    }
+
+    addPeer = (address) => {
+        this.peers.add(address)
+    }
+
+    getPeers = () => {
+        return Array.from(this.peers)
     }
 
     newBlock = async (previousHash = null, proofOfWork) => {
@@ -49,18 +61,18 @@ class Blockchain {
         let proof = 0
 
         let hash = await Blockchain.hash(previousHash + proof)
-        let isValid = await this.validProof(hash)
+        let isValid = await Blockchain.validProof(hash)
         while(!isValid){
             console.log(hash)
             proof++
             hash = await Blockchain.hash(previousHash + proof)
-            isValid = await this.validProof(hash)
+            isValid = await Blockchain.validProof(hash)
         }
 
         return {proof, hash}
     }
 
-    validProof = async (guessHash) => {
+    static validProof = async (guessHash) => {
         //checking if the hash with a specific 'proof' number contains
         //x amount of 0s
         return guessHash.toString().slice(0, hashDifficulty) === "0".repeat(hashDifficulty);
@@ -76,6 +88,69 @@ class Blockchain {
 
     getChain = () => {
         return this.chain
+    }
+
+    static validChain = async (chain) => {
+        let previousBlock = chain[0]
+        let currentIndex = 1
+
+        while (currentIndex < chain.length){
+            let block = chain[currentIndex]
+
+            if(block.previousHash != previousBlock.hash)
+                return false
+            
+            const isProofValid = await Blockchain.validProof(await Blockchain.hash(block.previousHash + block.proof))
+            if(!isProofValid){
+                // console.log('is not valid')
+                return false
+            } else {
+                previousBlock = block
+                currentIndex++
+            }
+        }
+
+        if(currentIndex == chain.length){
+            // console.log('is valid')
+            return true
+        }
+            
+    }
+
+    resolveConflicts = async () => {
+        return new Promise(resolve => {
+            const peers = this.getPeers()
+            let newChain = null
+            let maxLength = this.chain.length
+    
+            for(let i in peers){
+                const peer = peers[i]
+                axios.get(`${peer}/blockchain/chain`).then(async (res) => {
+                    if(res.status === 200){
+                        const chain = res.data
+                        const length = chain.length
+    
+                        console.log(await Blockchain.validChain(chain))
+                        if(maxLength < length && await Blockchain.validChain(chain)){
+                            maxLength = length
+                            newChain = chain
+    
+                            if(i == peers.length - 1){
+                                console.log('last')
+                                if(newChain){
+                                    console.log('new chain')
+                                    this.chain = newChain
+                                    resolve(true)
+                                } else resolve(false)
+                            }
+                        }
+                    }
+                }).catch(e => {
+                    console.log(e.message)
+                })
+            }
+        })
+
     }
 }
 
@@ -121,4 +196,29 @@ exports.mining = async (req, res) => {
 
 exports.getChain = (req, res) => {
     res.status(200).json(blockchain.getChain())
+}
+
+exports.registerNode = (req, res) => {
+    const {peers} = req.body
+    if(!peers) return res.status(400).json('please supply a valid list of peers')
+    const address = getIP(req)
+
+    blockchain.addPeer(address)
+    for(let i in peers){
+        const peer = peers[i]
+        blockchain.addPeer(peer)
+    }
+    
+    res.status(200).json(blockchain.getPeers())
+}
+
+exports.resolveBlockchain = async (req, res) => {
+    blockchain.resolveConflicts().then((resolved) => {
+        console.log(resolved)
+        if(resolved){
+            return res.status(200).json('chain replaced')
+        } else {
+            return res.status(200).json('our chain is the longest')
+        }
+    })
 }

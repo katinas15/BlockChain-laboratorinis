@@ -8,10 +8,10 @@ router.post(
 
 router.get(
     '/mine',
-    controller.newTransaction)
+    controller.mining)
 
 router.get(
     '/chain',
-    controller.newTransaction)
+    controller.getChain)
 
 module.exports = router

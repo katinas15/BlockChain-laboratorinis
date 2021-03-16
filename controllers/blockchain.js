@@ -79,7 +79,6 @@ class Blockchain {
     }
 
     static hash = async (guess) => {
-        //ordering so that hashes would follow the same order
         const sha256 = crypto.createHash('sha256')
         sha256.update(guess.toString())
         const guessHash = await sha256.digest('hex').toString()

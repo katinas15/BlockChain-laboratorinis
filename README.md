@@ -33,7 +33,7 @@ BODY
 
 **Start mining:**
 
-This will start mining for a hash that starts with **3** zeros
+This will start mining for a hash that starts with **3** zeros and create a new block when the hash is found
 
 ```
 GET http://localhost:3000/blockchain/mine

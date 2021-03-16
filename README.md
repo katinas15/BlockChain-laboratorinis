@@ -1,4 +1,4 @@
-# BlockChain-laboratorinis
+
  
 ## Startup
 Start two or more local instances by running this command in the terminal:

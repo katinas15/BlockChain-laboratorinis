@@ -70,7 +70,7 @@ BODY
 
 **Resolve chain:**
 
-After receiving this request node will make a request to all other registered nodes and check if it has the longest chain. If the chain is shorter, it will be replaced by the longest chain
+A node will make a request to all other registered nodes and check if it has the longest chain. If the chain is shorter, it will be replaced by the longest chain
 
 ```
 GET http://localhost:3001/blockchain/nodes/resolve
